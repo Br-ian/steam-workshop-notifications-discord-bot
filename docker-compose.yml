@@ -1,6 +1,6 @@
 version: '3'
 services:
-  steam-workshop-notifications-discrod-bot:
+  steam-workshop-notifications-discord-bot:
     image: ${SWNDB_IMAGE}
     volumes:
       - /opt/swndb/config:/bot/config
