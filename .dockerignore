@@ -1,0 +1,7 @@
+node_modules
+config
+data
+logs
+.eslintrc.js
+Dockerfile
+package-lock.json

@@ -1,0 +1,8 @@
+version: '3'
+services:
+  steam-workshop-notifications-discrod-bot:
+    image: ${SWNDB_IMAGE}
+    volumes:
+      - /opt/swndb/config:/bot/config
+      - /opt/swndb/data:/bot/data
+    restart: always
