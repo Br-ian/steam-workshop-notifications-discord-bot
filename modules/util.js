@@ -138,7 +138,7 @@ const writeFile = function (filename, content) {
 }
 
 const fileExists = function (filename) {
-    return new Promise((resolve, _) => {
+    return new Promise((resolve, ) => {
         fs.access(filename, fs.constants.F_OK, (err) => {
             if (err) {
                 resolve(false)

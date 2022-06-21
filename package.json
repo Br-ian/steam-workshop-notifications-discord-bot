@@ -13,8 +13,9 @@
   "author": "",
   "license": "GPL-3.0",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.29.0",
-    "@typescript-eslint/parser": "^5.29.0",
+    "@babel/eslint-parser": "^7.18.2",
+    "@babel/eslint-plugin": "^7.17.7",
+    "@babel/plugin-syntax-import-assertions": "^7.17.12",
     "eslint": "^8.18.0"
   },
   "dependencies": {
