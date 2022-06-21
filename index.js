@@ -8,14 +8,20 @@ import { spotRepManager } from './modules/spotrep-manager.js'
 import { logger } from './modules/logger.js'
 
 const id = function (message) {
+    logger.debug(`Received 'id' command from user '${message.author.username}'.`)
+
     message.reply(message.author.id).catch((e) => logger.error(e))
 }
 
 const version = function (message) {
+    logger.debug(`Received 'version' command from user '${message.author.username}'.`)
+
     message.reply(`Steam Workshop Notifications Discord Bot Version ${process.env.npm_package_version} by Brian`).catch((e) => logger.error(e))
 }
 
 const info = function (message) {
+    logger.debug(`Received 'info' command from user '${message.author.username}'.`)
+
     modManager.emit('listMods', message.guildId, (mods) => {
         modManager.emit('listNotificationsForGuildId', message.guildId, async (notifications) => {
             try {
@@ -46,6 +52,8 @@ const info = function (message) {
 }
 
 const monitor = function (message) {
+    logger.debug(`Received 'monitor' command from user '${message.author.username}'.`)
+
     // If there is no attachment, ignore this message.
     if (message.attachments.size === 0) {
         message.reply('Error: No attachment found.').catch((e) => logger.error(e))
@@ -87,6 +95,8 @@ const monitor = function (message) {
 }
 
 const notify = function (message) {
+    logger.debug(`Received 'notify' command from user '${message.author.username}'.`)
+
     let channelIds = []
     for (let channelNotification of message.mentions.channels) {
         let channelId = channelNotification[0]
@@ -119,6 +129,8 @@ const notify = function (message) {
 }
 
 const logs = function (message) {
+    logger.debug(`Received 'logs' command from user '${message.author.username}'.`)
+
     util.readFile('logs/combined.log')
         .then((data) => data.slice(-1900))
         .then((res) => message.reply(`\`combined.log\`\r\n\`\`\`${res}\`\`\``))
@@ -128,6 +140,8 @@ const logs = function (message) {
 }
 
 const disable = function (message) {
+    logger.debug(`Received 'disable' command from user '${message.author.username}'.`)
+
     modManager.emit('deleteAll', message.guildId, () => {
         message.reply('Monitoring disabled.')
     })
@@ -161,11 +175,14 @@ client.on('messageCreate', async (message) => {
     // If the bot isn't mentioned, ignore this message.
     if (!message.mentions.has(client.user.id)) return
 
-    // If the message is not a DM and the bot isn't mentioned first, ignore this message.
+    // If the bot isn't mentioned first, ignore this message.
     if (message.mentions.users.first().id !== client.user.id) return
+
+    logger.debug(`User '${message.author.username}' sent message: '${message}'`)
 
     let commands = message.content.split(' ')
     if (commands.length <= 1) {
+        logger.warn(`No command found in message: ${message} from user '${message.author.username}'`)
         message.reply(`Error: No command found. ${validCommands}`).catch((e) => logger.error(e))
         return
     }
@@ -178,6 +195,7 @@ client.on('messageCreate', async (message) => {
 
     // If the author of the message is not an admin, ignore this message.
     if (!config.admins.includes(message.author.id)) {
+        logger.warn(`User '${message.author.username}' does not have admin permissions.`)
         message.reply('Error: No admin permissions.').catch((e) => logger.error(e))
         return
     }
@@ -192,6 +210,7 @@ client.on('messageCreate', async (message) => {
             return
         default:
             if (message.channel.type !== 'DM') break
+            logger.warn(`Unknown command '${commands[1]}' from user '${message.author.username}'`)
             message.reply(`Error: Unknown command: \`${commands[1]}\`. ${validCommands}`).catch((e) => logger.error(e))
             return
     }
@@ -211,6 +230,7 @@ client.on('messageCreate', async (message) => {
             disable(message)
             return
         default:
+            logger.warn(`Unknown command '${commands[1]}' from user '${message.author.username}'`)
             message.reply(`Error: Unknown command: \`${commands[1]}\`. ${validCommands}`).catch((e) => logger.error(e))
             return
     }
