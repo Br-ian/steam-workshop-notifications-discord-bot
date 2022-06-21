@@ -2,7 +2,7 @@ import EventEmitter from 'events'
 import moment from 'moment'
 import * as cache from './cache-manager.js'
 import * as util from './util.js'
-import {logger} from './logger.js'
+import { logger } from './logger.js'
 
 const modManager = new EventEmitter()
 let modDatabase = new Map()
@@ -20,12 +20,10 @@ const deleteAll = function (guildId) {
 const deleteGuild = function (guildId) {
     // Delete old guildId references from mod database
     for (const [modUrl, mod] of modDatabase.entries()) {
-        if (mod.guilds.has(guildId))
-            mod.guilds.delete(guildId)
+        if (mod.guilds.has(guildId)) mod.guilds.delete(guildId)
 
         // If a mod has no guildId references, delete the mod
-        if (mod.guilds.size === 0)
-            modDatabase.delete(modUrl)
+        if (mod.guilds.size === 0) modDatabase.delete(modUrl)
     }
 }
 
@@ -91,7 +89,7 @@ modManager.on('setNotifications', (guildId, notifications, callback) => {
     callback()
 })
 
-modManager.on('loadModsFromCache', cachedMods => {
+modManager.on('loadModsFromCache', (cachedMods) => {
     logger.info('Loading mods from cache.')
 
     for (const cachedMod in cachedMods) {
@@ -107,7 +105,7 @@ modManager.on('saveModsToCache', async () => {
 
     let tmpMap = structuredClone(modDatabase)
     for (const [, value] of tmpMap.entries()) {
-        value['guilds'] = ([...value['guilds']])
+        value['guilds'] = [...value['guilds']]
     }
 
     try {
@@ -117,7 +115,7 @@ modManager.on('saveModsToCache', async () => {
     }
 })
 
-modManager.on('loadNotificationsFromCache', cachedNotifications => {
+modManager.on('loadNotificationsFromCache', (cachedNotifications) => {
     logger.info('Loading notifications from cache.')
 
     notificationDatabase = new Map(Object.entries(cachedNotifications))
@@ -143,9 +141,7 @@ modManager.on('checkMod', (client) => {
     }
 
     // If the queue is empty, reload it
-    if (modQueue.length === 0)
-        for (const modUrl of modDatabase.keys())
-            modQueue.push(modUrl)
+    if (modQueue.length === 0) for (const modUrl of modDatabase.keys()) modQueue.push(modUrl)
 
     let modUrl = modQueue.shift()
     let mod = modDatabase.get(modUrl)
@@ -156,7 +152,7 @@ modManager.on('checkMod', (client) => {
     logger.debug(`Checking mod '${mod.name}' (${modUrl})`)
 
     util.refreshMod(modUrl)
-        .then(lastModifiedNew => {
+        .then((lastModifiedNew) => {
             const lastModifiedOld = moment(mod.lastModified)
             if (lastModifiedNew.isAfter(lastModifiedOld)) {
                 mod.lastModified = lastModifiedNew.format()
@@ -165,43 +161,47 @@ modManager.on('checkMod', (client) => {
 
                 const modUrlId = new URL(modUrl).searchParams.get('id')
                 util.downloadFile(`https://steamcommunity.com/sharedfiles/filedetails/changelog/${modUrlId}`)
-                    .then(util.parseSteamWorkshopChangelogHtml).then(changelog => {
-                    if (changelog === '')
-                        return ''
+                    .then(util.parseSteamWorkshopChangelogHtml)
+                    .then((changelog) => {
+                        if (changelog === '') return ''
 
-                    return changelog.replaceAll('\n', '\r\n')
-                }).catch(e => {
-                    logger.error(e)
-                    return `Error: Could not load changelog: ${e.message}`
-                }).then(async (changelog) => {
-                    for (const guildId of mod.guilds) {
-                        let notifications = notificationDatabase.get(guildId)
-                        let notificationsString = await util.buildNotificationString(notifications, guildId, client)
+                        return changelog.replaceAll('\n', '\r\n')
+                    })
+                    .catch((e) => {
+                        logger.error(e)
+                        return `Error: Could not load changelog: ${e.message}`
+                    })
+                    .then(async (changelog) => {
+                        for (const guildId of mod.guilds) {
+                            let notifications = notificationDatabase.get(guildId)
+                            let notificationsString = await util.buildNotificationString(notifications, guildId, client)
 
-                        const message = `Mod \`${mod.name}\` (<${modUrl}>) was updated! ${notificationsString}`
-                        const splitChangelog = util.splitString(changelog, 1900)
-                        for (const channelId of notifications.channelIds) {
-                            client.channels.cache.get(channelId).send(message).catch(e => logger.error(e))
-                            for (let changelogPart of splitChangelog) {
-                                if (changelogPart.length === 0)
-                                    continue
-
-                                changelogPart = `\`\`\`${changelogPart}\`\`\``
-
+                            const message = `Mod \`${mod.name}\` (<${modUrl}>) was updated! ${notificationsString}`
+                            const splitChangelog = util.splitString(changelog, 1900)
+                            for (const channelId of notifications.channelIds) {
                                 client.channels.cache
                                     .get(channelId)
-                                    .send(changelogPart)
-                                    .catch(e => logger.error(e))
+                                    .send(message)
+                                    .catch((e) => logger.error(e))
+                                for (let changelogPart of splitChangelog) {
+                                    if (changelogPart.length === 0) continue
+
+                                    changelogPart = `\`\`\`${changelogPart}\`\`\``
+
+                                    client.channels.cache
+                                        .get(channelId)
+                                        .send(changelogPart)
+                                        .catch((e) => logger.error(e))
+                                }
                             }
                         }
-                    }
-                })
+                    })
             }
 
             mod.lastChecked = moment().format()
             modManager.emit('saveModsToCache')
         })
-        .catch(e => logger.error(e))
+        .catch((e) => logger.error(e))
 })
 
-export {modManager}
+export { modManager }

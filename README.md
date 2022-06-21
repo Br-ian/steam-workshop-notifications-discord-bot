@@ -1,6 +1,6 @@
 # Steam Workshop Notifications Discord Bot (SWNDB)
 
-A Discord bot which monitors the Steam Workshop and notifies users on Discord when a workshop item has updated. Currenty only supports ArmA 3.
+A Discord bot which monitors the Steam Workshop and notifies users on Discord when a workshop item has updated. Currently, only supports ArmA 3.
 
 ## Features
 
@@ -17,13 +17,14 @@ All commands must be prefixed with the bots name using Discord's mentions.
 * `@<BOTNAME> info` general info about how many mods are monitored, and who is notified where.
 * `@<BOTNAME> logs` outputs the log files. Private message allowed.
 * `@<BOTNAME> monitor` expects an ArmA3 modset HTML to be attached, determines the mods that should be monitored.
-* `@<BOTNAME> notify #<channel1> #<channel2> ... [@<user1> @<user2> ...] [#<role1> #<role2> ...] ` sets the users to be notified and the channels on which the bot outputs, multiple users and multiple channels allowed. Users and roles are optional. The order of channels, users and roles should not matter.
+* `@<BOTNAME> notify #<channel1> #<channel2> ... [@<user1> @<user2> ...] [#<role1> #<role2> ...] ` sets the users to be notified and the channels on which the bot outputs, multiple users and multiple
+  channels allowed. Users and roles are optional. The order of channels, users and roles should not matter.
 * `@<BOTNAME> disable` disables the bot completely.
 * `@<BOTNAME> version` returns the version of the bot. Private message allowed.
 
 ## Installation
 
-Only Docker deployment is supported. 
+Only Docker deployment is supported.
 
 ### Requirements
 
@@ -45,7 +46,7 @@ Only Docker deployment is supported.
 * Click on 'OAuth2' in the sidebar and then on 'General'.
 * Click on the 'Copy' button to copy the client ID, save it.
 * Open the following URL to invite the bot, insert your client ID:
-`https://discord.com/oauth2/authorize?client_id=<YOUR CLIENT ID>&permissions=35840&scope=bot`
+  `https://discord.com/oauth2/authorize?client_id=<YOUR CLIENT ID>&permissions=35840&scope=bot`
 * The bot should now appear on your Discord server, showing as offline.
 
 ### Build and Push Docker Image
@@ -65,6 +66,7 @@ nano /opt/swndb/config/config.json
 ```
 
 Paste the following to `config.json`, replacing the token with the previously obtained Discord bot token:
+
 ```json
 {
   "token": "<token obtained from Discord dev portal>",
@@ -93,7 +95,9 @@ Once the bot is online, send the following private message to the bot to obtain 
 Open `config.json` and add the ID as a string to the admin list as follows:
 
 ```json
-"admins": ["<YOUR ID>"]
+{
+  "admins": ["<YOUR ID>"]
+}
 ```
 
 Restart the container.

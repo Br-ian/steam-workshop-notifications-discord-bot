@@ -6,10 +6,9 @@ const modsCacheFile = './data/mods_cache.json'
 const spotRepCacheFile = './data/spotrep_cache.json'
 
 export const createModsCache = function () {
-    return util.fileExists(modsCacheFile)
-        .then(exists => {
-            return !exists ? util.writeFile(modsCacheFile, '{}') : Promise.resolve(exists)
-        })
+    return util.fileExists(modsCacheFile).then((exists) => {
+        return !exists ? util.writeFile(modsCacheFile, '{}') : Promise.resolve(exists)
+    })
 }
 
 export const writeModsToCache = function (mods) {
@@ -21,10 +20,9 @@ export const readModsFromCache = function () {
 }
 
 export const createNotificationsCache = function () {
-    return util.fileExists(notificationsCacheFile)
-        .then(exists => {
-            return !exists ? util.writeFile(notificationsCacheFile, '{}') : Promise.resolve(exists)
-        })
+    return util.fileExists(notificationsCacheFile).then((exists) => {
+        return !exists ? util.writeFile(notificationsCacheFile, '{}') : Promise.resolve(exists)
+    })
 }
 
 export const writeNotificationsToCache = function (notifications) {
@@ -36,10 +34,9 @@ export const readNotificationsFromCache = function () {
 }
 
 export const createSpotRepCache = function () {
-    return util.fileExists(spotRepCacheFile)
-        .then(exists => {
-            return !exists ? util.writeFile(spotRepCacheFile, `{ "lastUpdate": "${moment().format()}"}`) : Promise.resolve(exists)
-        })
+    return util.fileExists(spotRepCacheFile).then((exists) => {
+        return !exists ? util.writeFile(spotRepCacheFile, `{ "lastUpdate": "${moment().format()}"}`) : Promise.resolve(exists)
+    })
 }
 
 export const writeSpotRepToCache = function (spotRep) {

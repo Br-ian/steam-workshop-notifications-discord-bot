@@ -1,18 +1,18 @@
-import {Client, Intents} from 'discord.js'
-import config from './config/config.json' assert {type: 'json'}
+import { Client, Intents } from 'discord.js'
+import config from './config/config.json' assert { type: 'json' }
 import schedule from 'node-schedule'
 import * as util from './modules/util.js'
 import * as cache from './modules/cache-manager.js'
-import {modManager} from './modules/mod-manager.js'
-import {spotRepManager} from './modules/spotrep-manager.js'
-import {logger} from './modules/logger.js'
+import { modManager } from './modules/mod-manager.js'
+import { spotRepManager } from './modules/spotrep-manager.js'
+import { logger } from './modules/logger.js'
 
 const id = function (message) {
-    message.reply(message.author.id).catch(e => logger.error(e))
+    message.reply(message.author.id).catch((e) => logger.error(e))
 }
 
 const version = function (message) {
-    message.reply(`Steam Workshop Notifications Discord Bot Version ${process.env.npm_package_version} by Brian`).catch(e => logger.error(e))
+    message.reply(`Steam Workshop Notifications Discord Bot Version ${process.env.npm_package_version} by Brian`).catch((e) => logger.error(e))
 }
 
 const info = function (message) {
@@ -22,25 +22,20 @@ const info = function (message) {
                 let infoString = `Monitoring ${mods.length} mod(s).`
                 if (notifications) {
                     infoString += ` Notifying ${notifications.memberIds.length} members and ${notifications.roleIds.length} roles on ${notifications.channelIds.length} channels. \r\n`
-                    let channels = await Promise.all(notifications.channelIds.map(id => message.guild.channels.fetch(id))).then(channels => channels.map(channel => `> ${channel.toString()}`))
-                    let members = await Promise.all(notifications.memberIds.map(id => message.guild.members.fetch(id))).then(members => members.map(member => `> ${member.toString()}`))
-                    let roles = await Promise.all(notifications.roleIds.map(id => message.guild.roles.fetch(id))).then(roles => roles.map(role => `> ${role.toString()}`))
+                    let channels = await Promise.all(notifications.channelIds.map((id) => message.guild.channels.fetch(id))).then((channels) => channels.map((channel) => `> ${channel.toString()}`))
+                    let members = await Promise.all(notifications.memberIds.map((id) => message.guild.members.fetch(id))).then((members) => members.map((member) => `> ${member.toString()}`))
+                    let roles = await Promise.all(notifications.roleIds.map((id) => message.guild.roles.fetch(id))).then((roles) => roles.map((role) => `> ${role.toString()}`))
 
-                    if (channels.length > 0)
-                        infoString += `\r\n Channels: \r\n ${channels.join('\r\n')} \r\n`
-                    if (members.length > 0)
-                        infoString += `\r\n Members: \r\n ${members.join('\r\n')} \r\n`
-                    if (roles.length > 0)
-                        infoString += `\r\n Roles: \r\n ${roles.join('\r\n')}`
-                } else
-                    infoString += ' Notifications disabled.'
+                    if (channels.length > 0) infoString += `\r\n Channels: \r\n ${channels.join('\r\n')} \r\n`
+                    if (members.length > 0) infoString += `\r\n Members: \r\n ${members.join('\r\n')} \r\n`
+                    if (roles.length > 0) infoString += `\r\n Roles: \r\n ${roles.join('\r\n')}`
+                } else infoString += ' Notifications disabled.'
 
-                if (mods.length > 0)
-                    infoString += `\r\n Mods: \r\n ${mods.map(x => `> ${x.name}\r\n`).join('')}`
+                if (mods.length > 0) infoString += `\r\n Mods: \r\n ${mods.map((x) => `> ${x.name}\r\n`).join('')}`
 
                 const splitInfoStrings = util.splitString(infoString, 1900)
                 for (let splitInfoString of splitInfoStrings) {
-                    message.reply(`${splitInfoString}`).catch(e => logger.error(e))
+                    message.reply(`${splitInfoString}`).catch((e) => logger.error(e))
                 }
             } catch (e) {
                 logger.error(e)
@@ -53,13 +48,13 @@ const info = function (message) {
 const monitor = function (message) {
     // If there is no attachment, ignore this message.
     if (message.attachments.size === 0) {
-        message.reply('Error: No attachment found.').catch(e => logger.error(e))
+        message.reply('Error: No attachment found.').catch((e) => logger.error(e))
         return
     }
 
     // Check if all attachments are of content type html.
     let invalid_attachment = false
-    message.attachments.forEach(attachment => {
+    message.attachments.forEach((attachment) => {
         if (!attachment.contentType.toLowerCase().includes('html')) {
             invalid_attachment = true
         }
@@ -67,27 +62,27 @@ const monitor = function (message) {
 
     // If there is an invalid attachment, ignore this message.
     if (invalid_attachment === true) {
-        message.reply('Error: HTML attachment expected.').catch(e => logger.error(e))
+        message.reply('Error: HTML attachment expected.').catch((e) => logger.error(e))
         return
     }
 
     logger.debug('Parsing attachments.')
 
-    message.attachments.forEach(attachment => {
+    message.attachments.forEach((attachment) => {
         util.downloadFile(attachment.attachment)
-            .then(html => util.parseModsHtml(html))
-            .then(mods => {
+            .then((html) => util.parseModsHtml(html))
+            .then((mods) => {
                 for (let mod in mods) {
                     mods[mod]['guilds'] = [message.guildId]
                 }
                 modManager.emit('monitorMods', mods, message.guildId)
                 return message.reply(`Parsed ${Object.keys(mods).length} mods.`)
             })
-            .catch(e => {
+            .catch((e) => {
                 logger.error(e)
                 return message.reply(`Error: ${e.message}`)
             })
-            .catch(e => logger.error(e))
+            .catch((e) => logger.error(e))
     })
 }
 
@@ -101,8 +96,7 @@ const notify = function (message) {
     let memberIds = []
     for (let memberNotification of message.mentions.members) {
         let memberId = memberNotification[0]
-        if (client.user.id === memberId)
-            continue
+        if (client.user.id === memberId) continue
 
         memberIds.push(memberId)
     }
@@ -114,9 +108,9 @@ const notify = function (message) {
     }
 
     let notifications = {
-        'channelIds': channelIds,
-        'memberIds': memberIds,
-        'roleIds': roleIds
+        channelIds: channelIds,
+        memberIds: memberIds,
+        roleIds: roleIds,
     }
 
     modManager.emit('setNotifications', message.guildId, notifications, () => {
@@ -125,8 +119,12 @@ const notify = function (message) {
 }
 
 const logs = function (message) {
-    util.readFile('logs/combined.log').then(data => data.slice(-1900)).then(res => message.reply(`\`combined.log\`\r\n\`\`\`${res}\`\`\``))
-    util.readFile('logs/error.log').then(data => data.slice(-1900)).then(res => message.reply(`\`error.log\`\r\n\`\`\`${res}\`\`\``))
+    util.readFile('logs/combined.log')
+        .then((data) => data.slice(-1900))
+        .then((res) => message.reply(`\`combined.log\`\r\n\`\`\`${res}\`\`\``))
+    util.readFile('logs/error.log')
+        .then((data) => data.slice(-1900))
+        .then((res) => message.reply(`\`error.log\`\r\n\`\`\`${res}\`\`\``))
 }
 
 const disable = function (message) {
@@ -146,9 +144,10 @@ const client = new Client({
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
     logger.info('Steam Workshop Notifications Discord Bot Online! Active on:')
-    client.guilds.fetch()
-        .then(guilds => guilds.forEach(guild => logger.info(`* ${guild.name} - ${guild.id}`)))
-        .catch(e => logger.error(e))
+    client.guilds
+        .fetch()
+        .then((guilds) => guilds.forEach((guild) => logger.info(`* ${guild.name} - ${guild.id}`)))
+        .catch((e) => logger.error(e))
 
     // TODO cross check mod caches with the joined servers, detect if bot is removed from a server, and then empty the cache for that server
     // TODO also, add an 'on leave' event
@@ -167,7 +166,7 @@ client.on('messageCreate', async (message) => {
 
     let commands = message.content.split(' ')
     if (commands.length <= 1) {
-        message.reply(`Error: No command found. ${validCommands}`).catch(e => logger.error(e))
+        message.reply(`Error: No command found. ${validCommands}`).catch((e) => logger.error(e))
         return
     }
 
@@ -179,10 +178,9 @@ client.on('messageCreate', async (message) => {
 
     // If the author of the message is not an admin, ignore this message.
     if (!config.admins.includes(message.author.id)) {
-        message.reply('Error: No admin permissions.').catch(e => logger.error(e))
+        message.reply('Error: No admin permissions.').catch((e) => logger.error(e))
         return
     }
-
 
     // DM supported commands
     switch (commands[1]) {
@@ -193,9 +191,8 @@ client.on('messageCreate', async (message) => {
             logs(message)
             return
         default:
-            if (message.channel.type !== 'DM')
-                break
-            message.reply(`Error: Unknown command: \`${commands[1]}\`. ${validCommands}`).catch(e => logger.error(e))
+            if (message.channel.type !== 'DM') break
+            message.reply(`Error: Unknown command: \`${commands[1]}\`. ${validCommands}`).catch((e) => logger.error(e))
             return
     }
 
@@ -214,11 +211,10 @@ client.on('messageCreate', async (message) => {
             disable(message)
             return
         default:
-            message.reply(`Error: Unknown command: \`${commands[1]}\`. ${validCommands}`).catch(e => logger.error(e))
+            message.reply(`Error: Unknown command: \`${commands[1]}\`. ${validCommands}`).catch((e) => logger.error(e))
             return
     }
 })
-
 
 await cache.createSpotRepCache()
 const cachedSpotRep = await cache.readSpotRepFromCache()
