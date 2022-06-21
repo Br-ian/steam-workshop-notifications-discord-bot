@@ -1,16 +1,16 @@
-import EventEmitter from "events";
-import moment from "moment";
-import * as cache from "./cache-manager.js";
-import * as util from "./util.js";
-import {modManager} from "./mod-manager.js";
-import {logger} from "./logger.js";
+import EventEmitter from 'events'
+import moment from 'moment'
+import * as cache from './cache-manager.js'
+import * as util from './util.js'
+import {modManager} from './mod-manager.js'
+import {logger} from './logger.js'
 
 const spotRepManager = new EventEmitter()
 let spotRepDatabase = new Map()
 
 spotRepManager.on('loadSpotRepFromCache', cachedSpotRep => {
     logger.info('Loading SpotRep from cache.')
-
+    
     spotRepDatabase = new Map(Object.entries(cachedSpotRep))
 
     logger.info(`SpotRep loaded from cache, last update: ${spotRepDatabase.get('lastUpdate')}.`)
@@ -30,7 +30,7 @@ spotRepManager.on('checkSpotRep', async (client) => {
     const res = await util.downloadFile('https://dev.arma3.com/spotrep')
         .then(html => util.parseArmaSpotRepHtml(html))
 
-    if(res['time'].isBefore(moment(spotRepDatabase.get('lastUpdate')))) {
+    if (res['time'].isBefore(moment(spotRepDatabase.get('lastUpdate')))) {
         logger.debug('SpotRep not updated')
         return
     }
@@ -49,11 +49,11 @@ spotRepManager.on('checkSpotRep', async (client) => {
             const message = `Arma was updated \`${res['info']}\` (<${res['link']}>) was updated! ${notificationsString}`
             const splitChangelog = util.splitString(changelog, 1900, '\n')
 
-            for(const channelId of notifications.channelIds) {
+            for (const channelId of notifications.channelIds) {
                 client.channels.cache.get(channelId).send(message).catch(e => logger.error(e))
 
-                for(let changelogPart of splitChangelog) {
-                    if(changelogPart.length === 0)
+                for (let changelogPart of splitChangelog) {
+                    if (changelogPart.length === 0)
                         continue
 
                     changelogPart = `\`\`\`${changelogPart}\`\`\``
@@ -71,4 +71,4 @@ spotRepManager.on('checkSpotRep', async (client) => {
     spotRepManager.emit('saveSpotRepToCache')
 })
 
-export { spotRepManager }
+export {spotRepManager}

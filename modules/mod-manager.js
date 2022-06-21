@@ -1,8 +1,8 @@
-import EventEmitter from "events";
-import moment from "moment";
-import * as cache from "./cache-manager.js";
-import * as util from "./util.js";
-import {logger} from "./logger.js";
+import EventEmitter from 'events'
+import moment from 'moment'
+import * as cache from './cache-manager.js'
+import * as util from './util.js'
+import {logger} from './logger.js'
 
 const modManager = new EventEmitter()
 let modDatabase = new Map()
@@ -10,21 +10,21 @@ let notificationDatabase = new Map()
 
 let modQueue = []
 
-const deleteAll = function(guildId) {
+const deleteAll = function (guildId) {
     // Delete old guildId -> notifications link
     notificationDatabase.delete(guildId)
 
     deleteGuild(guildId)
 }
 
-const deleteGuild = function(guildId) {
+const deleteGuild = function (guildId) {
     // Delete old guildId references from mod database
     for (const [modUrl, mod] of modDatabase.entries()) {
-        if(mod.guilds.has(guildId))
+        if (mod.guilds.has(guildId))
             mod.guilds.delete(guildId)
 
         // If a mod has no guildId references, delete the mod
-        if(mod.guilds.size === 0)
+        if (mod.guilds.size === 0)
             modDatabase.delete(modUrl)
     }
 }
@@ -33,7 +33,7 @@ modManager.on('listMods', (guildId, callback) => {
     let mods = []
 
     for (const [, mod] of modDatabase.entries()) {
-        if(mod.guilds.has(guildId)) {
+        if (mod.guilds.has(guildId)) {
             mods.push(mod)
         }
     }
@@ -68,11 +68,11 @@ modManager.on('deleteAll', (guildId, callback) => {
 modManager.on('monitorMods', (newMods, guildId) => {
     deleteGuild(guildId) // Clear existing mods being monitored on this server
 
-    for(const newMod in newMods) {
-        if(modDatabase.has(newMod)) {
+    for (const newMod in newMods) {
+        if (modDatabase.has(newMod)) {
             newMods[newMod]['guilds'].forEach(modDatabase.get(newMod)['guilds'].add, modDatabase.get(newMod)['guilds']) // TODO does this block?
         } else {
-            newMods[newMod]['guilds'] = new Set(newMods[newMod]['guilds'] )
+            newMods[newMod]['guilds'] = new Set(newMods[newMod]['guilds'])
             newMods[newMod]['lastChecked'] = moment.unix(0).format()
             newMods[newMod]['lastModified'] = moment().format()
 
@@ -94,7 +94,7 @@ modManager.on('setNotifications', (guildId, notifications, callback) => {
 modManager.on('loadModsFromCache', cachedMods => {
     logger.info('Loading mods from cache.')
 
-    for(const cachedMod in cachedMods) {
+    for (const cachedMod in cachedMods) {
         cachedMods[cachedMod]['guilds'] = new Set(cachedMods[cachedMod]['guilds'])
     }
     modDatabase = new Map(Object.entries(cachedMods))
@@ -137,19 +137,19 @@ modManager.on('saveNotificationsToCache', async () => {
 
 modManager.on('checkMod', (client) => {
     // If no mods are in the database, don't do anything
-    if(modDatabase.size === 0) {
+    if (modDatabase.size === 0) {
         logger.warn('No mods to check.')
         return
     }
 
     // If the queue is empty, reload it
-    if(modQueue.length === 0)
-        for(const modUrl of modDatabase.keys())
+    if (modQueue.length === 0)
+        for (const modUrl of modDatabase.keys())
             modQueue.push(modUrl)
 
     let modUrl = modQueue.shift()
     let mod = modDatabase.get(modUrl)
-    if(!mod) {
+    if (!mod) {
         logger.error(`Cannot find mod ${modUrl}.`)
         return
     }
@@ -158,7 +158,7 @@ modManager.on('checkMod', (client) => {
     util.refreshMod(modUrl)
         .then(lastModifiedNew => {
             const lastModifiedOld = moment(mod.lastModified)
-            if(lastModifiedNew.isAfter(lastModifiedOld)) {
+            if (lastModifiedNew.isAfter(lastModifiedOld)) {
                 mod.lastModified = lastModifiedNew.format()
 
                 logger.info(`Mod ${mod.name} was updated on ${mod.lastModified}`)
@@ -166,24 +166,24 @@ modManager.on('checkMod', (client) => {
                 const modUrlId = new URL(modUrl).searchParams.get('id')
                 util.downloadFile(`https://steamcommunity.com/sharedfiles/filedetails/changelog/${modUrlId}`)
                     .then(util.parseSteamWorkshopChangelogHtml).then(changelog => {
-                    if(changelog === '')
+                    if (changelog === '')
                         return ''
 
                     return changelog.replaceAll('\n', '\r\n')
-                    }).catch(e => {
-                        logger.error(e)
-                        return `Error: Could not load changelog: ${e.message}`
-                    }).then(async (changelog) => {
-                    for(const guildId of mod.guilds) {
+                }).catch(e => {
+                    logger.error(e)
+                    return `Error: Could not load changelog: ${e.message}`
+                }).then(async (changelog) => {
+                    for (const guildId of mod.guilds) {
                         let notifications = notificationDatabase.get(guildId)
                         let notificationsString = await util.buildNotificationString(notifications, guildId, client)
 
                         const message = `Mod \`${mod.name}\` (<${modUrl}>) was updated! ${notificationsString}`
                         const splitChangelog = util.splitString(changelog, 1900)
-                        for(const channelId of notifications.channelIds) {
+                        for (const channelId of notifications.channelIds) {
                             client.channels.cache.get(channelId).send(message).catch(e => logger.error(e))
-                            for(let changelogPart of splitChangelog) {
-                                if(changelogPart.length === 0)
+                            for (let changelogPart of splitChangelog) {
+                                if (changelogPart.length === 0)
                                     continue
 
                                 changelogPart = `\`\`\`${changelogPart}\`\`\``
@@ -204,4 +204,4 @@ modManager.on('checkMod', (client) => {
         .catch(e => logger.error(e))
 })
 
-export { modManager }
+export {modManager}

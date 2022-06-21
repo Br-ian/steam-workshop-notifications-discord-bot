@@ -1,9 +1,9 @@
-import https from "https";
-import {parse} from "node-html-parser";
-import moment from "moment";
-import {convert} from "html-to-text";
-import fs from "fs";
-import {logger} from "./logger.js";
+import https from 'https'
+import {parse} from 'node-html-parser'
+import moment from 'moment'
+import {convert} from 'html-to-text'
+import fs from 'fs'
+import {logger} from './logger.js'
 
 const downloadFile = function (url) {
     return new Promise((resolve, reject) => {
@@ -22,8 +22,8 @@ const downloadFile = function (url) {
     })
 }
 
-const parseModsHtml = function(html) {
-    return new Promise((resolve, ) => {
+const parseModsHtml = function (html) {
+    return new Promise((resolve,) => {
         const root = parse(html)
         const modData = root.querySelectorAll('tr[data-type="ModContainer"]').map(x => {
             let mods = {}
@@ -40,8 +40,8 @@ const parseModsHtml = function(html) {
     })
 }
 
-const parseSteamWorkshopHtml = function(html) {
-    return new Promise((resolve, ) => {
+const parseSteamWorkshopHtml = function (html) {
+    return new Promise((resolve,) => {
         const root = parse(html)
 
         let rawLastModified
@@ -50,14 +50,14 @@ const parseSteamWorkshopHtml = function(html) {
                 .querySelector('.detailsStatsContainerRight')
                 .querySelector('.detailsStatRight:last-child')
                 .rawText // TODO: returns wrong data sometimes, something with caching or client side date time?
-        } catch(e) {
+        } catch (e) {
             logger.error('Last modified date not found, mod set to private?') // TODO Propagate this error and handle it correctly
             throw(e)
         }
 
         // Mods released in current year do not have the year in timestamp
         let splitRawLastModified = rawLastModified.split(' ')
-        if(splitRawLastModified.length === 4) {
+        if (splitRawLastModified.length === 4) {
             splitRawLastModified.splice(2, 0, moment().year().toString())
             rawLastModified = splitRawLastModified.join(' ')
         }
@@ -68,8 +68,8 @@ const parseSteamWorkshopHtml = function(html) {
     })
 }
 
-const parseSteamWorkshopChangelogHtml = function(html) {
-    return new Promise((resolve, ) => {
+const parseSteamWorkshopChangelogHtml = function (html) {
+    return new Promise((resolve,) => {
         const root = parse(html)
         const changelog = root
             .querySelector('.workshopAnnouncement ')
@@ -80,17 +80,17 @@ const parseSteamWorkshopChangelogHtml = function(html) {
         changelog.removeChild(headLineElement)
         changelog.removeChild(commentsElement)
 
-        resolve(convert(changelog.toString(), { wordwrap: null }))
+        resolve(convert(changelog.toString(), {wordwrap: null}))
     })
 }
 
-const refreshMod = function(modUrl) {
+const refreshMod = function (modUrl) {
     return downloadFile(modUrl)
         .then(html => parseSteamWorkshopHtml(html))
 }
 
-const parseArmaSpotRepHtml = function(html) {
-    return new Promise((resolve, ) => {
+const parseArmaSpotRepHtml = function (html) {
+    return new Promise((resolve,) => {
         const root = parse(html)
 
         const infoTag = root.querySelector('article').querySelector('div .dev-post-excerpt')
@@ -107,15 +107,15 @@ const parseArmaSpotRepHtml = function(html) {
     })
 }
 
-const parseArmaSpotRepPostHtml = function(html) {
-    return new Promise((resolve, ) => {
+const parseArmaSpotRepPostHtml = function (html) {
+    return new Promise((resolve,) => {
         const root = parse(html)
         const content = root.querySelector('div .post-content')
         resolve(convert(content.toString(), {wordwrap: null}))
     })
 }
 
-const readFile = function(filename) {
+const readFile = function (filename) {
     return new Promise((resolve, reject) => {
         fs.readFile(filename, 'utf8', (e, data) => {
             if (e)
@@ -126,7 +126,7 @@ const readFile = function(filename) {
     })
 }
 
-const writeFile = function(filename, content) {
+const writeFile = function (filename, content) {
     return new Promise((resolve, reject) => {
         fs.writeFile(filename, content, 'utf8', e => {
             if (e)
@@ -137,7 +137,7 @@ const writeFile = function(filename, content) {
     })
 }
 
-const fileExists = function(filename) {
+const fileExists = function (filename) {
     return new Promise((resolve, _) => {
         fs.access(filename, fs.constants.F_OK, (err) => {
             if (err) {
@@ -149,11 +149,11 @@ const fileExists = function(filename) {
     })
 }
 
-const splitString = function(string, size, pattern = '\r\n') {
+const splitString = function (string, size, pattern = '\r\n') {
     let splitStrings = []
     while (string.length > size) {
-        let lastNewLineIndex = string.slice(0, size).lastIndexOf(pattern); // TODO what if this pattern is not found
-        if(lastNewLineIndex === -1)
+        let lastNewLineIndex = string.slice(0, size).lastIndexOf(pattern) // TODO what if this pattern is not found
+        if (lastNewLineIndex === -1)
             lastNewLineIndex = size - 1
 
         const splitString = string.slice(0, lastNewLineIndex)
@@ -178,6 +178,16 @@ const buildNotificationString = async function (notifications, guildId, client) 
 }
 
 export {
-    downloadFile, parseModsHtml, parseSteamWorkshopHtml, parseSteamWorkshopChangelogHtml, refreshMod,
-    parseArmaSpotRepHtml, parseArmaSpotRepPostHtml, readFile, writeFile, fileExists, splitString, buildNotificationString
+    downloadFile,
+    parseModsHtml,
+    parseSteamWorkshopHtml,
+    parseSteamWorkshopChangelogHtml,
+    refreshMod,
+    parseArmaSpotRepHtml,
+    parseArmaSpotRepPostHtml,
+    readFile,
+    writeFile,
+    fileExists,
+    splitString,
+    buildNotificationString
 }

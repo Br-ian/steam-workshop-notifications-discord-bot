@@ -1,21 +1,21 @@
 import {Client, Intents} from 'discord.js'
-import config from './config/config.json' assert {type: "json"}
+import config from './config/config.json' assert {type: 'json'}
 import schedule from 'node-schedule'
-import * as util from './modules/util.js';
-import * as cache from './modules/cache-manager.js';
-import {modManager} from "./modules/mod-manager.js";
-import {spotRepManager} from "./modules/spotrep-manager.js";
-import {logger} from "./modules/logger.js";
+import * as util from './modules/util.js'
+import * as cache from './modules/cache-manager.js'
+import {modManager} from './modules/mod-manager.js'
+import {spotRepManager} from './modules/spotrep-manager.js'
+import {logger} from './modules/logger.js'
 
-const id = function(message) {
+const id = function (message) {
     message.reply(message.author.id).catch(e => logger.error(e))
 }
 
-const version = function(message) {
-    message.reply(`Steam Workshop Notifications Disbord Bot Version ${process.env.npm_package_version} by Brian`).catch(e => logger.error(e))
+const version = function (message) {
+    message.reply(`Steam Workshop Notifications Discord Bot Version ${process.env.npm_package_version} by Brian`).catch(e => logger.error(e))
 }
 
-const info = function(message) {
+const info = function (message) {
     modManager.emit('listMods', message.guildId, (mods) => {
         modManager.emit('listNotificationsForGuildId', message.guildId, async (notifications) => {
             try {
@@ -26,11 +26,11 @@ const info = function(message) {
                     let members = await Promise.all(notifications.memberIds.map(id => message.guild.members.fetch(id))).then(members => members.map(member => `> ${member.toString()}`))
                     let roles = await Promise.all(notifications.roleIds.map(id => message.guild.roles.fetch(id))).then(roles => roles.map(role => `> ${role.toString()}`))
 
-                    if(channels.length > 0)
+                    if (channels.length > 0)
                         infoString += `\r\n Channels: \r\n ${channels.join('\r\n')} \r\n`
-                    if(members.length > 0)
+                    if (members.length > 0)
                         infoString += `\r\n Members: \r\n ${members.join('\r\n')} \r\n`
-                    if(roles.length > 0)
+                    if (roles.length > 0)
                         infoString += `\r\n Roles: \r\n ${roles.join('\r\n')}`
                 } else
                     infoString += ' Notifications disabled.'
@@ -39,10 +39,10 @@ const info = function(message) {
                     infoString += `\r\n Mods: \r\n ${mods.map(x => `> ${x.name}\r\n`).join('')}`
 
                 const splitInfoStrings = util.splitString(infoString, 1900)
-                for(let splitInfoString of splitInfoStrings) {
+                for (let splitInfoString of splitInfoStrings) {
                     message.reply(`${splitInfoString}`).catch(e => logger.error(e))
                 }
-            } catch(e) {
+            } catch (e) {
                 logger.error(e)
                 return message.reply(`Error: ${e.message}`)
             }
@@ -50,9 +50,9 @@ const info = function(message) {
     })
 }
 
-const monitor = function(message) {
+const monitor = function (message) {
     // If there is no attachment, ignore this message.
-    if(message.attachments.size === 0) {
+    if (message.attachments.size === 0) {
         message.reply('Error: No attachment found.').catch(e => logger.error(e))
         return
     }
@@ -60,13 +60,13 @@ const monitor = function(message) {
     // Check if all attachments are of content type html.
     let invalid_attachment = false
     message.attachments.forEach(attachment => {
-        if(!attachment.contentType.toLowerCase().includes('html')) {
+        if (!attachment.contentType.toLowerCase().includes('html')) {
             invalid_attachment = true
         }
     })
 
     // If there is an invalid attachment, ignore this message.
-    if(invalid_attachment === true) {
+    if (invalid_attachment === true) {
         message.reply('Error: HTML attachment expected.').catch(e => logger.error(e))
         return
     }
@@ -77,7 +77,7 @@ const monitor = function(message) {
         util.downloadFile(attachment.attachment)
             .then(html => util.parseModsHtml(html))
             .then(mods => {
-                for(let mod in mods) {
+                for (let mod in mods) {
                     mods[mod]['guilds'] = [message.guildId]
                 }
                 modManager.emit('monitorMods', mods, message.guildId)
@@ -91,24 +91,24 @@ const monitor = function(message) {
     })
 }
 
-const notify = function(message) {
+const notify = function (message) {
     let channelIds = []
-    for(let channelNotification of message.mentions.channels) {
+    for (let channelNotification of message.mentions.channels) {
         let channelId = channelNotification[0]
         channelIds.push(channelId)
     }
 
     let memberIds = []
-    for(let memberNotification of message.mentions.members) {
+    for (let memberNotification of message.mentions.members) {
         let memberId = memberNotification[0]
-        if(client.user.id === memberId)
+        if (client.user.id === memberId)
             continue
 
         memberIds.push(memberId)
     }
 
     let roleIds = []
-    for(let roleNotification of message.mentions.roles) {
+    for (let roleNotification of message.mentions.roles) {
         let roleId = roleNotification[0]
         roleIds.push(roleId)
     }
@@ -124,14 +124,14 @@ const notify = function(message) {
     })
 }
 
-const logs = function(message) {
+const logs = function (message) {
     util.readFile('logs/combined.log').then(data => data.slice(-1900)).then(res => message.reply(`\`combined.log\`\r\n\`\`\`${res}\`\`\``))
     util.readFile('logs/error.log').then(data => data.slice(-1900)).then(res => message.reply(`\`error.log\`\r\n\`\`\`${res}\`\`\``))
 }
 
-const disable = function(message) {
+const disable = function (message) {
     modManager.emit('deleteAll', message.guildId, () => {
-        message.reply(`Monitoring disabled.`)
+        message.reply('Monitoring disabled.')
     })
 }
 
@@ -155,7 +155,7 @@ client.once('ready', () => {
 })
 
 // When a message is received
-client.on('messageCreate',  async (message) => {
+client.on('messageCreate', async (message) => {
     // If message is from the bot itself, ignore this message.
     if (message.author.bot) return
 
@@ -179,7 +179,7 @@ client.on('messageCreate',  async (message) => {
 
     // If the author of the message is not an admin, ignore this message.
     if (!config.admins.includes(message.author.id)) {
-        message.reply(`Error: No admin permissions.`).catch(e => logger.error(e))
+        message.reply('Error: No admin permissions.').catch(e => logger.error(e))
         return
     }
 
@@ -193,7 +193,7 @@ client.on('messageCreate',  async (message) => {
             logs(message)
             return
         default:
-            if(message.channel.type !== 'DM')
+            if (message.channel.type !== 'DM')
                 break
             message.reply(`Error: Unknown command: \`${commands[1]}\`. ${validCommands}`).catch(e => logger.error(e))
             return
@@ -235,11 +235,11 @@ modManager.emit('loadModsFromCache', cachedMods)
 await client.login(config.token)
 
 // Check ArmA SpotRep every minute
-schedule.scheduleJob('0 * * * * *', function(){
+schedule.scheduleJob('0 * * * * *', function () {
     spotRepManager.emit('checkSpotRep', client)
 })
 
 // Check Steam Workshop items every 10 seconds
-schedule.scheduleJob('*/10 * * * * *', function(){
+schedule.scheduleJob('*/10 * * * * *', function () {
     modManager.emit('checkMod', client)
 })
