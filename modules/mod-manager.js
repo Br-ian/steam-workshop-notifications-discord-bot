@@ -213,7 +213,9 @@ modManager.on('checkMod', (client) => {
             mod.lastChecked = moment().format()
             modManager.emit('saveModsToCache')
         })
-        .catch((e) => logger.error(e))
+        .catch((e) => {
+            logger.error(`Could not update mod '${mod.name}': ${e}`)
+        })
 })
 
 export { modManager }
