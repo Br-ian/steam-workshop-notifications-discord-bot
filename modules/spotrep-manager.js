@@ -27,9 +27,15 @@ spotRepManager.on('saveSpotRepToCache', async () => {
 })
 
 spotRepManager.on('checkSpotRep', async (client) => {
-    const res = await util.downloadFile('https://dev.arma3.com/spotrep').then((html) => util.parseArmaSpotRepHtml(html))
+    let spotRepData
+    try {
+        spotRepData = await util.downloadFile('https://dev.arma3.com/spotrep').then((html) => util.parseArmaSpotRepHtml(html))
+    } catch (e) {
+        logger.error(`Could not parse ArmA SpotRep: ${e}`)
+        return
+    }
 
-    if (res['time'].isBefore(moment(spotRepDatabase.get('lastUpdate')))) {
+    if (spotRepData['time'].isBefore(moment(spotRepDatabase.get('lastUpdate')))) {
         logger.debug('SpotRep not updated')
         return
     }
@@ -37,13 +43,25 @@ spotRepManager.on('checkSpotRep', async (client) => {
     logger.info('SpotRep updated')
     spotRepDatabase.set('lastUpdate', moment().format())
 
-    const changelog = await util.downloadFile(res['link']).then((html) => util.parseArmaSpotRepPostHtml(html))
+    let changelog
+    try {
+        changelog = await util.downloadFile(spotRepData['link']).then((html) => util.parseArmaSpotRepPostHtml(html))
+    } catch (e) {
+        logger.error(`Could not parse ArmA SpotRep changelog: ${e}`)
+        return
+    }
 
     modManager.emit('listNotifications', async (notificationsMap) => {
         for (const [guildId, notifications] of notificationsMap.entries()) {
-            let notificationsString = await util.buildNotificationString(notifications, guildId, client)
+            let notificationsString
+            try {
+                notificationsString = await util.buildNotificationString(notifications, guildId, client)
+            } catch (e) {
+                logger.error(`Could not build notification string for guild ID '${guildId}': ${e}`)
+                continue
+            }
 
-            const message = `Arma was updated \`${res['info']}\` (<${res['link']}>) was updated! ${notificationsString}`
+            const message = `Arma was updated \`${spotRepData['info']}\` (<${spotRepData['link']}>) was updated! ${notificationsString}`
             const splitChangelog = util.splitString(changelog, 1900, '\n')
 
             for (const channelId of notifications.channelIds) {

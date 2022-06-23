@@ -52,7 +52,8 @@ const parseSteamWorkshopHtml = function (html) {
 
         let rawLastModified
         try {
-            rawLastModified = root.querySelector('.detailsStatsContainerRight').querySelector('.detailsStatRight:last-child').rawText // TODO: returns wrong data sometimes, something with caching or client side date time?
+            // The date/time that is returend here will not match local date time due to JavaScript not being executed
+            rawLastModified = root.querySelector('.detailsStatsContainerRight').querySelector('.detailsStatRight:last-child').rawText
         } catch (e) {
             logger.error('Last modified date not found, mod set to private?') // TODO Propagate this error and handle it correctly
             throw e

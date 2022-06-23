@@ -96,6 +96,7 @@ Open `config.json` and add the ID as a string to the admin list as follows:
 
 ```json
 {
+  "token": "<token obtained from Discord dev portal>",
   "admins": ["<YOUR ID>"]
 }
 ```

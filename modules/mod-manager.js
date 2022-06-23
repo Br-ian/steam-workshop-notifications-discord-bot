@@ -72,7 +72,7 @@ modManager.on('monitorMods', (newMods, guildId) => {
         } else {
             newMods[newMod]['guilds'] = new Set(newMods[newMod]['guilds'])
             newMods[newMod]['lastChecked'] = moment.unix(0).format()
-            newMods[newMod]['lastModified'] = moment().format()
+            newMods[newMod]['lastModified'] = moment.unix(0).format()
 
             modDatabase.set(newMod, newMods[newMod])
         }
@@ -101,7 +101,7 @@ modManager.on('loadModsFromCache', (cachedMods) => {
 })
 
 modManager.on('saveModsToCache', async () => {
-    logger.info('Saving mods to cache.')
+    logger.debug('Saving mods to cache.')
 
     let tmpMap = structuredClone(modDatabase)
     for (const [, value] of tmpMap.entries()) {
@@ -149,18 +149,23 @@ modManager.on('checkMod', (client) => {
         logger.error(`Cannot find mod ${modUrl}.`)
         return
     }
-    logger.debug(`Checking mod '${mod.name}' (${modUrl})`)
+    logger.info(`Checking mod '${mod.name}' (${modUrl}).`)
 
     util.refreshMod(modUrl)
-        .then((lastModifiedNew) => {
-            const lastModifiedOld = moment(mod.lastModified)
-            if (lastModifiedNew.isAfter(lastModifiedOld)) {
-                mod.lastModified = lastModifiedNew.format()
+        .then((htmlLastModified) => {
+            const cachedLastModified = moment(mod.lastModified)
 
-                logger.info(`Mod ${mod.name} was updated on ${mod.lastModified}`)
+            logger.debug(`Mod '${mod.name}', cached last updated: '${cachedLastModified}', html last updated: '${htmlLastModified}'.`)
+            if (cachedLastModified.isSame(moment.unix(0).format())) {
+                logger.debug(`Mod '${mod.name}', first update check, setting last updated to '${htmlLastModified}'.`)
+                mod.lastModified = htmlLastModified.format()
+            } else if (htmlLastModified.isAfter(cachedLastModified)) {
+                mod.lastModified = htmlLastModified.format()
+
+                logger.info(`Mod '${mod.name}' was updated! Last update changed from '${cachedLastModified}' to '${htmlLastModified}'.`)
 
                 const modUrlId = new URL(modUrl).searchParams.get('id')
-                util.downloadFile(`https://steamcommunity.com/sharedfiles/filedetails/changelog/${modUrlId}`)
+                util.downloadFile(`https://steamcommunity.com/sharedfiles/filedetails/changelog/${modUrlId}.`)
                     .then(util.parseSteamWorkshopChangelogHtml)
                     .then((changelog) => {
                         if (changelog === '') return ''
@@ -174,6 +179,11 @@ modManager.on('checkMod', (client) => {
                     .then(async (changelog) => {
                         for (const guildId of mod.guilds) {
                             let notifications = notificationDatabase.get(guildId)
+                            if (notifications === undefined) {
+                                logger.warn(`Not notifying anyone on guild ID '${guildId}', no notifications set.'`)
+                                return
+                            }
+
                             let notificationsString = await util.buildNotificationString(notifications, guildId, client)
 
                             const message = `Mod \`${mod.name}\` (<${modUrl}>) was updated! ${notificationsString}`
@@ -196,6 +206,8 @@ modManager.on('checkMod', (client) => {
                             }
                         }
                     })
+            } else {
+                logger.debug(`Mod '${mod.name}', was not updated.`)
             }
 
             mod.lastChecked = moment().format()
