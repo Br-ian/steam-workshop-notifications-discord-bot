@@ -172,8 +172,8 @@ client.on('messageCreate', async (message) => {
     // If message is from the bot itself, ignore this message.
     if (message.author.bot) return
 
-    // If the bot isn't mentioned, ignore this message.
-    if (!message.mentions.has(client.user.id)) return
+    // If the bot isn't mentioned or there are no mentions at all, ignore this message.
+    if (!message.mentions.has(client.user.id) || message.mentions.users.size === 0) return
 
     // If the bot isn't mentioned first, ignore this message.
     if (message.mentions.users.first().id !== client.user.id) return

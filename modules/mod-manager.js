@@ -22,8 +22,12 @@ const deleteGuild = function (guildId) {
     for (const [modUrl, mod] of modDatabase.entries()) {
         if (mod.guilds.has(guildId)) mod.guilds.delete(guildId)
 
-        // If a mod has no guildId references, delete the mod
-        if (mod.guilds.size === 0) modDatabase.delete(modUrl)
+        // If a mod has no guildId references, delete the mod from the mod cache and the queue
+        if (mod.guilds.size === 0) {
+            logger.debug(`Mod '${mod.name}' is no longer monitored on any server, deleting from queue.`)
+            modDatabase.delete(modUrl)
+            modQueue = modQueue.filter((queuedModUrl) => queuedModUrl !== modUrl)
+        }
     }
 }
 
